@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "interakt"
+version = "1.0.0"
+authors = [
+  {name = "Frank Tonjes", email = "infy101@hotmail.com"}
+]
+description = "Interakt"
+readme = "README.md"
+requires-python = ">=3.14"
+keywords = ["ssh", "Secure-Shell"]
+
+dependencies = [
+    "keyring>=25.6.0",
+    "paramiko>=4.0.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/"
+"Bug Reports" = "https://github.com/"
+"Source" = "https://github.com/"
+
+[tools.setuptools]
+package-dir = {"" = "src"}
+
+[tools.setuptools.packages.find]
+where = ["src"]

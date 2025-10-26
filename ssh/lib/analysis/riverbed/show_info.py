@@ -1,0 +1,69 @@
+import re
+import time
+from ssh.lib.analysis.utilities import uptime_to_seconds
+
+
+def analyze(output, collection=None):
+    """
+
+        Riverbed - 'show info' command analysis
+
+    :param output: output from 'show info' on a Riverbed device (type: str)
+    :param collection: collection to which analyzed information is added to
+    :return: collection with included analysis from 'show info' command
+    """
+
+    # Version: 1.0 - Initial version
+    # Description: Analyze 'show info' output from a Riverbed device
+    # Regex: '^show info$'
+
+    # If no prior collection is specified, assume this is a new one:
+    if collection is None:
+        collection = {}
+    elif not isinstance(collection, dict):
+        return False, "Collection should be in 'dict' format."
+
+    if not isinstance(output, str):
+        return False, "Output from 'show info' command should be in string format."
+
+    collection['host_vendor'] = 'Riverbed'
+    collection['_host_name_extraction'] = r"^(.*?)\s\>\s$"
+
+    # START
+
+    tmp = re.compile(r'\b(.*?):\s+(.*)(\n|\b)', re.MULTILINE)
+    for item, value, _ in re.findall(tmp, output):
+
+        if item == 'Appliance Up Time':
+            collection['host_uptime'] = uptime_to_seconds(value)
+            collection['host_restarted'] = time.time() - collection['host_uptime']
+
+        elif item == 'Service Up Time':
+            collection['host_service_uptime'] = int(uptime_to_seconds(value))
+            collection['host_service_restarted'] = int(time.time() - collection['host_service_uptime'])
+
+        elif item == 'Model':
+            collection['host_family'] = 'Steelhead CX'
+
+            tmp = re.search(r"^(.*?)\s\((.*)\)$", value)
+            if tmp:
+                collection['host_series'] = tmp.group(1)
+                collection['host_model'] = tmp.group(2)
+
+            else:
+                tmp = re.search(r"^(\d+)$", value)
+                if tmp:
+                    collection['host_series'] = tmp.group(1)
+                    collection['host_model'] = tmp.group(1)
+
+        elif item == 'Serial':
+            collection['host_serial_number'] = value
+        elif item == 'Version':
+            collection['host_software_version'] = value
+        elif item == 'Revision':
+            collection['host_software_revision'] = value
+
+        else:
+            collection[item] = value
+
+    return True, collection
