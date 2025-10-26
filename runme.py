@@ -1,4 +1,5 @@
 import os
+import sys
 from ssh.bin.session import SSHSession
 
 # Initialize session to 'jump-host':
@@ -35,7 +36,8 @@ if jump_host.status == 'connected':
         )
         ssh.connect()
     except ValueError as err:
-        pass
+        print(f"Unable to connect to host, Error: '{err}'")
+        sys.exit(1)
     else:
         command_list = ['date', 'ifconfig -a', 'cat /etc/os-release']
         if ssh.status == 'connected':
@@ -43,6 +45,11 @@ if jump_host.status == 'connected':
                 if ssh.ssh_error is None:
                     result = ssh.send_command(command)
 
-        ssh.disconnect()
-        jump_host.disconnect()
-        print(ssh.__dict__)  # View ssh object properties
+        ssh.disconnect()        # Disconnect from the host
+        jump_host.disconnect()  # Disconnect from the jump-host
+        print(ssh.__dict__)     # View ssh object properties
+        sys.exit(0)
+
+else:
+    print(f"Unable to connect to {jump_host.host}:{jump_host.port}, Error: '{jump_host.ssh_error}'")
+    sys.exit(1)
