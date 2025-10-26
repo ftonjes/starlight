@@ -19,7 +19,7 @@
 # 18:12:26.702 <SSH_USERNAME>@2.2.2.2:22022 (2): Connection successfull. (0.08s)
 # 18:12:26.702 <SSH_USERNAME>@2.2.2.2:22022 (2): Cipher: aes128-ctr, MAC: hmac-sha2-256, Version: SSH-2.0-OpenSSH_9.6p1 Ubuntu-3ubuntu13.13, Compression: None
 # 18:12:26.784 <SSH_USERNAME>@2.2.2.2:22022 (2): Host appears to be a 'Linux' device! [Prompt]
-# 18:12:26.796 <SSH_USERNAME>@2.2.2.2:22022 (2): Found prompt '<SSH_USERNAME>@interakt:~$ '.
+# 18:12:26.796 <SSH_USERNAME>@2.2.2.2:22022 (2): Found prompt '<SSH_USERNAME>@<HOSTNAME>:~$ '.
 # 18:12:26.796 <SSH_USERNAME>@2.2.2.2:22022 (2): Sending command 'date'...
 # 18:12:26.809 <SSH_USERNAME>@2.2.2.2:22022 (2): Command 'date' completed. (0.01s)
 # 18:12:26.822 <SSH_USERNAME>@2.2.2.2:22022 (2): Sending command 'cat /etc/os-release'...
@@ -40,7 +40,7 @@
 # not required on a system that users do not log into.
 # 
 # To restore this content, you can run the 'unminimize' command.
-# Last login: Sun Oct 26 18:43:46 2025 from 192.168.10.51
+# Last login: Sun Oct 26 18:43:46 2025 from 10.10.10.10
 # <SSH_USERNAME>@<HOSTNAME>:~$ date
 # Sun Oct 26 18:43:53 GMT 2025
 # <SSH_USERNAME>@<HOSTNAME>:~$ cat /etc/os-release

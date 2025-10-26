@@ -1,6 +1,5 @@
 .idea/*
 .log/*
 *.log
-test/*
 notes/*
 runme.py
