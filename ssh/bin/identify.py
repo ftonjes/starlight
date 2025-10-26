@@ -58,10 +58,15 @@ def auto_reponse(prompt_string):
 
 # Identify device by SSH version
 SSH_VERSIONS = [
-    {
+{
         'regex': r'^(SSH-.*?-Cisco-\d.*?)$',
         'vendor': 'cisco'
-    }
+    },
+    {
+        'regex': r'^(SSH-.*[Uu]buntu\d.*?)$',
+        'vendor': 'ubuntu'
+    },
+
 ]
 
 # Identify properties by SSH prompt

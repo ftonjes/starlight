@@ -11,11 +11,9 @@ import socket
 import paramiko
 import re
 
-import ssh.bin.logger as logger
+import core.logger as logger
 from ssh.bin.identify import id_by_prompt, id_by_ssh_version
 from ssh.bin.utilities import strip_ansi
-
-from pprint import pprint
 
 def connect(self):
 
@@ -27,7 +25,6 @@ def connect(self):
     tries = 0
     tries_text = {0: '1st', 1: '2nd', 2: '3rd', 3: '4th', 4: '5th'}
     stop_retries = False
-    logger_prefix = ''
 
     self.status = 'connecting'
     self.session_object = paramiko.SSHClient()
@@ -136,12 +133,13 @@ def connect(self):
                 #
                 # self.local_ip_v4_address = self.jump_host.get_transport().sock.getsockname()[0]
                 # self.local_ip_v4_port = self.jump_host.get_transport().sock.getsockname()[1]
-
                 identified = id_by_ssh_version(transport.remote_version)
+
                 if identified:
                     self.vendor = identified['vendor']
                     logger.debug(
-                        "%s: Host appears to be a '%s' device! [SSH Version]", logger_prefix, identified['vendor'].capitalize())
+                        "%s: Host OS vendor appears to be '%s'. [SSH Version]",
+                        logger_prefix, identified['vendor'].capitalize())
 
                 # Get initial banner:
                 try:
@@ -182,10 +180,7 @@ def connect(self):
                         self.raw += raw_input
 
                         # Check if data was received and if so, set the retries to 0:
-                        latest_chunk = strip_ansi(self.raw.replace(b'\xff', b'').decode('utf-8', 'ignore'))
                         ssh_output += strip_ansi(raw_input.decode('utf-8', 'ignore'))
-                        # ssh_output = (ssh_output + latest_chunk).replace(
-                        #     ' \x08', '').replace(' \r', '').replace('\r', '')
                         self.session_object_interact_time = time.time()
 
                         # if re.search(r"% Authentication failed", ssh_output, re.MULTILINE | re.DOTALL):

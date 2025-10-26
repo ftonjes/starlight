@@ -6,7 +6,7 @@
 
 import time
 
-import ssh.bin.logger as logger
+import core.logger as logger
 
 
 def disconnect(self):

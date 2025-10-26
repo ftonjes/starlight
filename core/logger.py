@@ -5,6 +5,7 @@
 """
 import logging
 import os
+
 from logging import config
 
 
@@ -32,9 +33,21 @@ def warning(msg, *args, **kwargs):
     logger.warning(msg, *args, **kwargs)
 
 
+def find_log_dir(project):
+
+    # Find where to output logs (projects 'logs' directory if found, or current directory's 'logs' directory if not.
+    found_proj_dir = os.getcwd()
+    while True:
+        if found_proj_dir.split('/')[-1] == project:
+            return found_proj_dir
+        else:
+            found_proj_dir = '/'.join(found_proj_dir.split('/')[:-1])
+        if len(found_proj_dir.split('/')[:-1]) == 1:
+            return os.getcwd()
+
 # Configuration
 app_name = 'starlight'
-log_path = './logs'
+log_path = find_log_dir(app_name) + '/logs'
 
 # Start
 os.makedirs(log_path, exist_ok=True)
@@ -54,7 +67,7 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stdout",
             "formatter": "verbose",
-            "level": "DEBUG"
+            "level": "CRITICAL"
         },
         "file": {
             "class": "logging.FileHandler",

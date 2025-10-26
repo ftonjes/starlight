@@ -2,7 +2,7 @@ import pprint
 import time
 import itertools
 
-from ssh.bin.logger import logger
+from core.logger import logger
 from ssh.bin.connect import connect
 from ssh.bin.interaction import send_command
 from ssh.bin.disconnect import disconnect

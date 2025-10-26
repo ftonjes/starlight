@@ -7,7 +7,7 @@
 import time
 import re
 
-import ssh.bin.logger as logger
+import core.logger as logger
 from ssh.bin.identify import id_by_prompt, auto_reponse
 from ssh.bin.utilities import strip_ansi
 

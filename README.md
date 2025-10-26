@@ -32,3 +32,5 @@ I hopo starlight will become a single platform from which to automate various 'i
 5. Database design for system
 6. Web UI
 7. Testing
+
+## Example output:
