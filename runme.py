@@ -1,10 +1,15 @@
+import os
 from ssh.bin.session import SSHSession
 
-# Initialize session to 'jump-host'
+# Initialize session to 'jump-host':
 jump_host = SSHSession(
     host='1.1.1.1',
     authentication=[
-        {'username': 'user1', 'password': 'pass1', 'sudo_command': 'sudo bash'}
+        {
+            'username': os.environ['JH_USERNAME'],
+            'password': os.environ['JH_PASSWORD'],
+            'sudo_command': 'sudo bash'
+        }
     ],
     port=22
 )
@@ -18,7 +23,13 @@ if jump_host.status == 'connected':
     try:
         ssh = SSHSession(
             host='2.2.2.2',
-            authentication=[{'username': 'user2', 'password': 'pass2', 'sudo_command': 'sudo bash'}],
+            authentication=[
+                {
+                    'username': os.environ['SSH_USERNAME'],
+                    'password': os.environ['SSH_PASSWORD'],
+                    'sudo_command': 'sudo bash'
+                }
+            ],
             port=22022,
             connect_via=jump_host
         )
