@@ -11,7 +11,7 @@ from pprint import pprint
 """
 
 
-def get_creds(keywrd):
+def get_key(keywrd):
 
     """
         Get Credentials: First check keyring to find credential information. If it is not found, then check if the
@@ -22,7 +22,7 @@ def get_creds(keywrd):
     """
 
     if keywrd in os.environ:
-        return os.environ[keywrd]
+        return get_key(keywrd)
 
     pw = keyring.get_password(keywrd, keywrd)
     if pw is None:

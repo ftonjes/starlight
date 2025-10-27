@@ -1,0 +1,11 @@
+{
+    "apis": {
+
+        "service_now_uat": {
+            "name": "Service Now UAT Environment",
+            "url": "https://demo.service-now.com",
+            "username": "SERVICE_NOW_USER",
+            "password": "SERVICE_NOW_PASS"
+        }
+    }
+}

@@ -47,6 +47,9 @@
 # LOGO=ubuntu-logo
 # <SSH_USERNAME>@<HOSTNAME>:~$
 
+import sys
+from core.keyring_manager import get_key
+from ssh.bin.session import SSHSession
 
 # Initialize session to host:
 host = SSHSession(

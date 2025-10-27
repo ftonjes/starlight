@@ -1,0 +1,233 @@
+{
+    "apis": {
+        "netbox_prod": {
+            "name": "Netbox Production",
+            "url": "https://netbox.xtc.mrshmc.com",
+            "token": "NETBOX_TOKEN"
+        },
+        "netbox_dev": {
+            "name": "Netbox Development",
+            "url": "https://netbox-dev.xtc.mrshmc.com",
+            "token": "NETBOX_TOKEN"
+        }
+    },
+    "mapping": {
+        "interakt": {
+            "IOS-XE": {
+                "os_type": "cisco_ios"
+            },
+            "Cisco IOS": {
+                "os_type": "cisco_ios"
+            },
+            "Cisco NX-OS": {
+                "os_type": "cisco_nxos"
+            },
+            "CGXOS": {
+                "os_type": "cgx_os"
+            },
+            "TMOS": {
+                "os_type": "f5_tmos"
+            },
+            "OG-OS": {
+                "os_type": "og_os"
+            },
+            "Arista EOS": {
+                "os_type": "arista_eos"
+            },
+            "ArubaOS": {
+                "os_type": "aruba_os"
+            },
+            "ExtrahopOS": {
+                "os_type": "eh_os"
+            },
+            "PAN-OS": {
+                "os_type": "pan_os"
+            }
+        }
+    },
+    "filters": {
+        "arista-all": {
+            "description": "All Arista devices",
+            "query_type": "devices",
+            "query_filter": {
+                "status": [
+                    "staged",
+                    "active",
+                    "planned"
+                ],
+                "manufacturer": "arista",
+                "tenant": "xtc",
+                "has_primary_ip": true
+            }
+        },
+        "aruba-all": {
+            "description": "All Aruba devices",
+            "query_type": "devices",
+            "query_filter": {
+                "status": [
+                    "staged",
+                    "active",
+                    "planned"
+                ],
+                "manufacturer": "aruba",
+                "tenant": "xtc",
+                "has_primary_ip": true
+            }
+        },
+        "cisco-all": {
+            "description": "All Cisco devices",
+            "query_type": "devices",
+            "netbox_filter": {
+                "status": [
+                    "staged",
+                    "active",
+                    "planned"
+                ],
+                "manufacturer": "cisco",
+                "tenant": "xtc",
+                "has_primary_ip": true
+            },
+            "post_processing": {
+                "primary_ip.address": {
+                    "operator": "!re",
+                    "value": "^224\\.0\\."
+                }
+            },
+            "show_fields": [
+                "site.region.parent.name:netbox_region",
+                "site.region.name:netbox_sub_region",
+                "site.custom_fields.ens_location_code:netbox_site_ens_location_code",
+                "site.custom_fields.criticality:netbox_site_criticality:int",
+                "site.custom_fields.total_employees:netbox_site_employees:int",
+                "site.custom_fields.city:netbox_site_city",
+                "site.name:netbox_site_name",
+                "site.tenant.name:netbox_site_tenant",
+                "site.facility:netbox_site_facility",
+                "site.id:netbox_site_id",
+                "id:netbox_device_id",
+                "primary_ip.address:netbox_management_ip_address:addr",
+                "primary_ip.address:netbox_management_ip_cidr:cidr",
+                "name:netbox_device_name",
+                "tag_list:netbox_device_tag_list",
+                "device_type.display:netbox_device_type",
+                "role.name:netbox_device_role",
+                "platform.name:netbox_device_os_type",
+                "status.label:netbox_device_status",
+                "tenant.name:netbox_device_tenant",
+                "device_type.model:netbox_device_model",
+                "device_type.manufacturer.name:netbox_device_manufacturer"
+            ]
+        },
+        "cloudgenix-all": {
+            "description": "All Cloudgenix devices",
+            "query_type": "devices",
+            "query_filter": {
+                "status": [
+                    "staged",
+                    "active",
+                    "planned"
+                ],
+                "platform": [
+                    "cgxos"
+                ],
+                "tenant": "xtc",
+                "has_primary_ip": true
+            }
+        },
+        "custom-device": {
+            "query_type": "devices",
+            "query_filter": {
+                "has_primary_ip": true,
+                "name": "ARBUE2-15AS01"
+            }
+        },
+        "f5-all": {
+            "description": "All F5 devices",
+            "query_type": "devices",
+            "query_filter": {
+                "status": [
+                    "staged",
+                    "active",
+                    "planned"
+                ],
+                "manufacturer": "f5",
+                "tenant": "xtc",
+                "has_primary_ip": true
+            }
+        },
+        "opengear-all": {
+            "description": "All Opengear devices",
+            "query_type": "devices",
+            "query_filter": {
+                "status": [
+                    "staged",
+                    "active",
+                    "planned"
+                ],
+                "manufacturer": "opengear",
+                "tenant": "xtc",
+                "has_primary_ip": true
+            }
+        },
+        "palo-alto-all": {
+            "description": "All Palo Alto devices",
+            "query_type": "devices",
+            "query_filter": {
+                "status": [
+                    "staged",
+                    "active",
+                    "planned"
+                ],
+                "manufacturer": "palo-alto",
+                "tenant": "xtc",
+                "has_primary_ip": true
+            }
+        },
+        "all-devices": {
+            "description": "All supported devices.",
+            "query_type": "devices",
+            "netbox_filter": {
+                "status": [
+                    "staged",
+                    "active",
+                    "planned"
+                ],
+                "manufacturer": [
+                    "cisco"
+                ],
+                "tenant": "xtc",
+                "has_primary_ip": true
+            },
+            "post_processing": {
+                "primary_ip.address": {
+                    "operator": "!re",
+                    "value": "^224\\.0\\."
+                }
+            },
+            "show_fields": [
+                "site.region.parent.name:netbox_region",
+                "site.region.name:netbox_sub_region",
+                "site.custom_fields.ens_location_code:netbox_site_ens_location_code",
+                "site.custom_fields.criticality:netbox_site_criticality:int",
+                "site.custom_fields.total_employees:netbox_site_employees:int",
+                "site.custom_fields.city:netbox_site_city",
+                "site.name:netbox_site_name",
+                "site.tenant.name:netbox_site_tenant",
+                "site.facility:netbox_site_facility",
+                "site.id:netbox_site_id",
+                "id:netbox_device_id",
+                "primary_ip.address:netbox_management_ip_address:addr",
+                "primary_ip.address:netbox_management_ip_cidr:cidr",
+                "name:netbox_device_name",
+                "tag_list:netbox_device_tag_list",
+                "device_type.display:netbox_device_type",
+                "role.name:netbox_device_role",
+                "platform.name:netbox_device_os_type",
+                "status.label:netbox_device_status",
+                "tenant.name:netbox_device_tenant",
+                "device_type.model:netbox_device_model",
+                "device_type.manufacturer.name:netbox_device_manufacturer"
+            ]
+        }
+    }
+}
