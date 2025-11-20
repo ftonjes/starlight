@@ -30,7 +30,11 @@ class SSHSession:
             compression: bool = False,
             vendor: str = None,
             description: str = None,
-            connect_via=None
+            connect_via=None,
+            is_jump_host: bool = False,
+            command_list: list = None,
+            max_sessions: int = 10,
+            task_id: int = None,
     ):
 
         self.host = host                               # Name or IP address of host
@@ -57,30 +61,39 @@ class SSHSession:
         self.raw = b''                                 # Raw SSH output
         self.prompt = ''                               # Current prompt info
         self.history = ''                              # Session history
-
         self.jump_host = connect_via                   # Connect via this SSHSession session (SSHSession object)
+        self.task_id = task_id                         # The task_id (used to update session manager once task complete)
 
-        # If we see connect_via, then we need to use the session manager to manage the connects via this host:
-        if self.jump_host is not None:
+        if command_list is None:
+            self.command_list = []
+        elif isinstance(command_list, str):
+            self.command_list = [command_list]
+        elif isinstance(command_list, list):
+            self.command_list = command_list
+        else:
+            raise TypeError("Command list must contain a single command, or list of commands.")
 
-            # If connect_via is a dict, we need to connect to the jump-host before we can initiate the session to the
-            #   remote host:
-            if isinstance(connect_via, dict):
-
+        if is_jump_host:
 
             # Set up session manager for jump-host:
             if not hasattr(self.jump_host, 'session_manager'):
-                connect_via.session_manager = SessionManager()
+                self.session_manager = SessionManager(max_sessions=max_sessions)
 
-            jh_session_id = connect_via.session_manager.get_next_available_session(self.session_id)
-            if jh_session_id > 0:
-                logger.debug(
-                    f"%s@%s:%s (%s): Session %s allocated to '%s:%s' (%s)", self.jump_host.username,
-                    self.jump_host.host, self.jump_host.port, self.jump_host.session_id, jh_session_id, self.host,
-                    self.port, self.session_id)
-            else:
-                self.ssh_error = f"Jump host '{self.jump_host.host}' has no sessions available."
-                return
+        # If we see connect_via, then we need to use the session manager to manage the connects via this host:
+        # else:
+        #
+        #     # If connect_via is a dict, we need to connect to the jump-host before we can initiate the session to the
+        #     #   remote host:
+        #
+        #     jh_session_id = connect_via.session_manager.get_next_available_session(self.session_id)
+        #     if jh_session_id > 0:
+        #         logger.debug(
+        #             f"%s@%s:%s (%s): Session %s allocated to '%s:%s' (%s)", self.jump_host.username,
+        #             self.jump_host.host, self.jump_host.port, self.jump_host.session_id, jh_session_id, self.host,
+        #             self.port, self.session_id)
+        #     else:
+        #         self.ssh_error = f"Jump host '{self.jump_host.host}' has no sessions available."
+        #         return
 
     def __repr__(self):
         return f"SSHSession_{self.host}:{self.port}"
@@ -120,8 +133,10 @@ class SessionManager:
             "default_retry_interval": retry_interval,
             "default_compression": compression
         }
+
         self.current_sessions = 0
         self.max_sessions = max_sessions
+        self.queue = []
 
         self.sessions = {}
         for session in range(max_sessions):
@@ -131,18 +146,17 @@ class SessionManager:
                 "activity": None
             }
 
-    def get_next_available_session(self, session_id: int):
+    def get_next_available_session(self, session_id: int = None):
 
         # Checks if there is an available session to connect via. Returns an available session id, or 0 if all are busy.
-        if self.current_sessions < self.max_sessions:
-            for index, session in enumerate(range(1, self.max_sessions)):
+        if self.current_sessions <= self.max_sessions:
+            for index, session in enumerate(range(1, self.max_sessions + 1)):
                 if self.sessions[index + 1]['status'] == 'idle':
                     self.sessions[index + 1]['status'] = 'allocated'
                     self.sessions[index + 1]['activity'] = time.time()
                     self.sessions[index + 1]['id'] = session_id
                     self.current_sessions += 1
                     return index + 1
-
         return 0
 
     def find_session(self, session_id: int):
@@ -161,6 +175,3 @@ class SessionManager:
             self.current_sessions -= 1
             return jh_session_id
         return 0
-
-
-jh_sessions = {}

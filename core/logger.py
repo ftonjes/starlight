@@ -67,7 +67,7 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stdout",
             "formatter": "verbose",
-            "level": "CRITICAL"
+            "level": "DEBUG"
         },
         "file": {
             "class": "logging.FileHandler",

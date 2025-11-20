@@ -158,7 +158,7 @@ def send_command(self, command: str):
                 output['time_failed'] = time.time()
                 break
 
-            time.sleep(0.01)  # Sleep a little to give the CPU a break!
+            # time.sleep(0.01)  # Sleep a little to give the CPU a break!
 
         # Remove instances where there are 'DEL' keystrokes followed by spaces, and again 'DEL' keystrokes. This
         #   happens when replying to the 'more' type prompts:
