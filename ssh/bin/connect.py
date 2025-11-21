@@ -41,6 +41,7 @@ def connect(self):
                     attempt_text = f' ({tries_text[tries]} attempt)'
 
             ssh_error = None
+            done_sudo = False
             connect_start = time.time()
             self.session_object_start_time = time.time()
 
@@ -183,16 +184,21 @@ def connect(self):
                         ssh_output += strip_ansi(raw_input.decode('utf-8', 'ignore'))
                         self.session_object_interact_time = time.time()
 
-                        # if re.search(r"% Authentication failed", ssh_output, re.MULTILINE | re.DOTALL):
-                        #     ssh_error = "Authentication failed"
-                        #     break
-                        #
-                        # # Opengear device: User has no shell access on device.
-                        # if re.search(r"User '.*?' does not have shell access on this device", ssh_output):
-                        #     ssh_error = f"User '{self.username}' does not have shell access on this device"
-                        #     break
-
                         current_prompt = ssh_output.split('\n')[-1]
+
+                        if re.search(r"% Authentication failed", ssh_output, re.MULTILINE | re.DOTALL):
+                            ssh_error = "Authentication failed"
+                            break
+
+                        # Opengear device: User has no shell access on device.
+                        if re.search(r"User '.*?' does not have shell access on this device", ssh_output):
+                            ssh_error = f"User '{self.username}' does not have shell access on this device"
+                            break
+
+                        if done_sudo and 'sudo_password' in auth_item:
+                            if re.search(r'sudo.*password', current_prompt):
+                                inv_shell.send(f"{auth_item['sudo_password']}\n")
+                                logger.debug("%s: Sent 'sudo' password...", logger_prefix)
 
                     if current_prompt != '':
                         if not ssh_error:
@@ -201,24 +207,32 @@ def connect(self):
                                 # Try to identify device using prompt
                                 identified = id_by_prompt(current_prompt)
                                 if identified:
-                                    self.prompt = identified
-                                    found_prompt = True
-                                    if self.vendor is None:
-                                        if 'vendor' in identified:
-                                            vendor_string = ''
-                                            if '|' in identified['vendor']:
-                                                for index, n in enumerate(identified['vendor'].split('|')):
-                                                    if index == 0:
-                                                        vendor_string += n.capitalize()
-                                                    elif index == len(identified['vendor'].split('|')) - 1:
-                                                        vendor_string += f"' or '{n.capitalize()}"
-                                                    else:
-                                                        vendor_string += f"', '{n.capitalize()}"
-                                            else:
-                                                vendor_string += identified['vendor'].capitalize()
-                                            logger.debug(
-                                                "%s: Host appears to be a '%s' device! [Prompt]", logger_prefix,
-                                                vendor_string)
+
+                                    # Check if we need to send sudo command:
+                                    if not done_sudo and 'sudo_command' in auth_item:
+                                        logger.debug(
+                                            "%s: Sent '%s' command...", logger_prefix, auth_item['sudo_command'])
+                                        inv_shell.send(f"{auth_item['sudo_command']}\n")
+                                        done_sudo = True
+                                    else:
+                                        self.prompt = identified
+                                        found_prompt = True
+                                        if self.vendor is None:
+                                            if 'vendor' in identified:
+                                                vendor_string = ''
+                                                if '|' in identified['vendor']:
+                                                    for index, n in enumerate(identified['vendor'].split('|')):
+                                                        if index == 0:
+                                                            vendor_string += n.capitalize()
+                                                        elif index == len(identified['vendor'].split('|')) - 1:
+                                                            vendor_string += f"' or '{n.capitalize()}"
+                                                        else:
+                                                            vendor_string += f"', '{n.capitalize()}"
+                                                else:
+                                                    vendor_string += identified['vendor'].capitalize()
+                                                logger.debug(
+                                                    "%s: Host appears to be a '%s' device! [Prompt]", logger_prefix,
+                                                    vendor_string)
 
                     if inv_shell.closed:
                         self.ssh_error = "Connection lost"
