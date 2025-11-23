@@ -44,8 +44,9 @@ def connect(self):
             done_sudo = False
             connect_start = time.time()
             self.session_object_start_time = time.time()
-
             self.username = auth_item.get('username')
+
+            # Check if we need to sudo after initial login:
             if 'sudo_command' in auth_item:
                 if 'password' in auth_item and 'sudo_password' not in auth_item:
                     auth_item['sudo_password'] = auth_item['password']
@@ -300,7 +301,6 @@ def connect(self):
         self.ssh_error = None
         tries = 0
         stop_retries = False
-
 
     return False
 

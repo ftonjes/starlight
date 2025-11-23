@@ -7,15 +7,16 @@ from pprint import pprint
 def interaction(tasks):
 
     global jump_hosts
+    global dsm
 
-    threader = None
-    max_direct_sessions= 10
-    dsm = SessionManager(max_sessions=max_direct_sessions)  # Direct session manager
+    logger.info('Starting...')
+    st = time.time()
 
     for task_id, task in enumerate(tasks):
 
         jump_host = task.get('connect_via', None)
 
+        # Jump-host
         if jump_host is not None:
 
             task['error'] = None
@@ -41,53 +42,78 @@ def interaction(tasks):
                 del jh_task['connect_via']
                 jump_hosts[jump_host['host']]['session'].session_manager.queue.append(jh_task)
 
+        # Direct
         else:
 
-            session_id = dsm.get_next_available_session(session_id=task['task_id'])
+            # Get session for next task (if available):
+            session_id = dsm.get_next_available_session(session_id=task_id + 1)
+            task['task_id'] = task_id + 1
             if session_id > 0:
                 threader = threading.Thread(target=ssh_worker, args=(task,))
                 threader.daemon = True
                 threader.start()
 
+            else:
+                dsm.queue.append(task)
+
     while True:
 
+        # Process jobs executing via jump-hosts:
         for jh in jump_hosts:
             if isinstance(jump_hosts[jh], SSHSession):
-                # print(f"{jump_hosts[jh].host}: {jump_hosts[jh].status} {jump_hosts[jh].session_manager.current_sessions}/{jump_hosts[jh].session_manager.max_sessions}")
-
+                # If sessions are free, assign a task from the queue to that session:
                 if jump_hosts[jh].session_manager.current_sessions < jump_hosts[jh].session_manager.max_sessions:
-
                     if len(jump_hosts[jh].session_manager.queue) > 0:
                         task = jump_hosts[jh].session_manager.queue.pop(0)
-                        session_id = jump_hosts[jh].session_manager.get_next_available_session(session_id=task['task_id'])
+                        session_id = jump_hosts[jh].session_manager.get_next_available_session(
+                            session_id=task['task_id'])
 
                         if session_id > 0:
                             threader = threading.Thread(target=ssh_worker, args=(task,))
                             threader.daemon = True
                             threader.start()
 
-        # Check if everything is done:
+                    # Disconnect from jump-host if all jobs are done!
+                    if jump_hosts[jh].session_manager.current_sessions == 0:
+                        if len(jump_hosts[jh].session_manager.queue) == 0:
+                            if jump_hosts[jh].status != 'disconnected':
+                                jump_hosts[jh].disconnect()
+                                jump_hosts[jh].status = 'disconnected'
 
-        # tasks_left = 0
-        # for jh in jump_hosts:
-        #     if isinstance(jump_hosts[jh], SSHSession):
-        #         print(len(jump_hosts[jh].session_manager.queue))
-        #         if len(jump_hosts[jh].session_manager.queue) > 0:
-        #             tasks_left += len(jump_hosts[jh].session_manager.queue)
-        #         else:
-        #             jump_hosts[jh].disconnect()
-        #
-        # if tasks_left == 0:
-        #     break
+        # Process direct sessions:
+        if dsm.current_sessions < dsm.max_sessions:
+            if len(dsm.queue) > 0:
+                task = dsm.queue.pop(0)
+                session_id = dsm.get_next_available_session(session_id=task['task_id'])
+                if session_id > 0:
+                    threader = threading.Thread(target=ssh_worker, args=(task,))
+                    threader.daemon = True
+                    threader.start()
+
+            # Work out if all tasks are complete (direct and via jump-hosts):
+            elif len(dsm.queue) == 0 and dsm.current_sessions == 0:
+
+                all_done = False
+                jh_done = 0
+                for jh in jump_hosts:
+                    if isinstance(jump_hosts[jh], SSHSession):
+                        if jump_hosts[jh].status == 'disconnected':
+                            jh_done += 1
+
+                if jh_done == len(jump_hosts):
+                    all_done = True
+
+                if all_done:
+                    logger.info(f'Completed! ({int(100*(time.time() - st))/100}s)')
+                    break
 
         time.sleep(0.01)
-
-    exit()
 
 
 def ssh_worker(session):
 
     global jump_hosts
+    global dsm
 
     #  Determine if this is a jump-host
     is_jump_host = False
@@ -117,15 +143,22 @@ def ssh_worker(session):
     if s.ssh_error is None and s.status == 'connected':
         pass
 
+    # Clear session once complete
     for jh in jump_hosts:
         if isinstance(jump_hosts[jh], SSHSession):
-
             for session in jump_hosts[jh].session_manager.sessions:
                 if jump_hosts[jh].session_manager.sessions[session].get('id') == s.task_id:
                     jump_hosts[jh].session_manager.sessions[session] = {
                         'activity': None, 'id': None, 'status': 'idle'}
                     jump_hosts[jh].session_manager.current_sessions -= 1
 
+    for session in dsm.sessions:
+        if dsm.sessions[session].get('id') == s.task_id:
+            dsm.sessions[session] = {'activity': None, 'id': None, 'status': 'idle'}
+            dsm.current_sessions -= 1
+
+
 jump_hosts = {}  # List of active jump-hosts.
 
-
+max_direct_sessions = 10
+dsm = SessionManager(max_sessions=max_direct_sessions)  # Direct session manager
